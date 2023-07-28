@@ -4,12 +4,15 @@ using AlquileresPunilla.Models;
 using Microsoft.EntityFrameworkCore;
 
 using AlquileresPunilla.Resultados.Complejos;
+using MySqlConnector;
 
 namespace AlquileresPunilla.Controllers;
 
 public class ComplejoController
 {
     private readonly AlquilerespunillaContext context;
+    private readonly string connectionString = "server=localhost;database=alquilerespunilla;uid=root;pwd=42218872Anto";
+
 
     public ComplejoController(AlquilerespunillaContext _context){
         context = _context;
@@ -30,7 +33,10 @@ public class ComplejoController
                     var resultAux = new ItemComplejo(){
                         IdComplejo=com.IdComplejo,
                         NombreComplejo = com.NombreComplejo,
-                        LinkFotos = com.LinkFotos
+                        LinkFotos = com.LinkFotos,
+                        LinkFacebook=com.LinkFacebook,
+                        LinkInstagram=com.LinkInstagram,
+                        Telefono=com.Telefono
                  
                     };
                     result.listaComplejos.Add(resultAux);
@@ -147,6 +153,9 @@ public class ComplejoController
             {
                 result.IdComplejo = complejo.IdComplejo;
                 result.NombreComplejo = complejo.NombreComplejo;
+                result.LinkFacebook=complejo.LinkFacebook;
+                result.LinkInstagram=complejo.LinkInstagram;
+                result.Telefono=complejo.Telefono;
                 
             }
             return result;
@@ -161,4 +170,91 @@ public class ComplejoController
     {
         throw new NotImplementedException();
     }
+        
+
+    [HttpGet]     
+    [Route("api/Alojamiento/lista/{fechaIngreso}/{fechaEgreso}")]        
+    public ActionResult<ResultadoAlojamiento> GetAlojamientosDisponibles(string fechaIngreso, string fechaEgreso)
+        {
+            string query = @"SELECT a.*
+                            FROM alquilerespunilla.alojamientos a
+                            WHERE a.idAlojamientos NOT IN (
+                                SELECT e.IdAlojamiento
+                                FROM alquilerespunilla.estadias e
+                                WHERE (e.FechaIngreso <= @FechaIngreso AND e.FechaEgreso >= @FechaIngreso)
+                                    OR (e.FechaIngreso <= @FechaEgreso AND e.FechaEgreso >= @FechaEgreso)
+                                    OR (e.FechaIngreso >= @FechaIngreso AND e.FechaEgreso <= @FechaEgreso)
+                            )";
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@FechaIngreso", fechaIngreso);
+                command.Parameters.AddWithValue("@FechaEgreso", fechaEgreso);
+
+                connection.Open();
+                MySqlDataReader reader = command.ExecuteReader();
+
+                ResultadoAlojamiento resultado = new ResultadoAlojamiento();
+                resultado.listaAlojamiento = new List<ItemAlojamiento>();
+
+                while (reader.Read())
+                {
+                    ItemAlojamiento item = new ItemAlojamiento();
+                    item.IdAlojamiento = reader.IsDBNull(reader.GetOrdinal("idAlojamientos")) ? null : (int?)reader.GetInt32("idAlojamientos");
+                    item.IdComplejo = reader.IsDBNull(reader.GetOrdinal("IdComplejo")) ? null : (int?)reader.GetInt32("IdComplejo");
+                    item.Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString("Descripcion");
+                    item.CantidadPersonas = reader.GetInt32("CantidadPersonas");
+                    item.LinkFotos = reader.IsDBNull(reader.GetOrdinal("LinkFotos")) ? null : reader.GetString("LinkFotos");
+
+                    resultado.listaAlojamiento.Add(item);
+                }
+
+                return resultado;
+            }
+        }
+    [HttpGet]     
+    [Route("api/Alojamiento/lista/{fechaIngreso}/{fechaEgreso}/{idComplejo}")]        
+    public ActionResult<ResultadoAlojamiento> GetDisponibles(string fechaIngreso, string fechaEgreso,int idComplejo)
+        {
+            string query = @"SELECT a.*
+                            FROM alquilerespunilla.alojamientos a
+                            WHERE a.idAlojamientos NOT IN (
+                                SELECT e.IdAlojamiento
+                                FROM alquilerespunilla.estadias e
+                                WHERE(e.FechaIngreso <= @FechaIngreso AND e.FechaEgreso >= @FechaIngreso)
+                                    OR (e.FechaIngreso <=@FechaEgreso AND e.FechaEgreso >= @FechaEgreso)
+                                    OR (e.FechaIngreso >= @FechaIngreso AND e.FechaEgreso <= @FechaEgreso))
+                                    and  a.IdComplejo = @idComplejo";
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@FechaIngreso", fechaIngreso);
+                command.Parameters.AddWithValue("@FechaEgreso", fechaEgreso);
+                command.Parameters.AddWithValue("@idComplejo", idComplejo);
+
+                connection.Open();
+                MySqlDataReader reader = command.ExecuteReader();
+
+                ResultadoAlojamiento resultado = new ResultadoAlojamiento();
+                resultado.listaAlojamiento = new List<ItemAlojamiento>();
+
+                while (reader.Read())
+                {
+                    ItemAlojamiento item = new ItemAlojamiento();
+                    item.IdAlojamiento = reader.IsDBNull(reader.GetOrdinal("idAlojamientos")) ? null : (int?)reader.GetInt32("idAlojamientos");
+                    item.IdComplejo = reader.IsDBNull(reader.GetOrdinal("IdComplejo")) ? null : (int?)reader.GetInt32("IdComplejo");
+                    item.Descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString("Descripcion");
+                    item.CantidadPersonas = reader.GetInt32("CantidadPersonas");
+                    item.LinkFotos = reader.IsDBNull(reader.GetOrdinal("LinkFotos")) ? null : reader.GetString("LinkFotos");
+
+                    resultado.listaAlojamiento.Add(item);
+                }
+
+                return resultado;
+            }
+        }
+    
+
 }

@@ -21,4 +21,5 @@ public class estadia
     public String Nombre { get; set; }
     public String Apellido { get; set; }
     public String Descripcion { get; set; }
+    public int ImportePendiente { get; set; }
 }

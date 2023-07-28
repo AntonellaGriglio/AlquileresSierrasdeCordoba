@@ -12,6 +12,7 @@ public class ComandoEstadiaPost
     public sbyte Desayuno { get; set; }
     public int ImporteTotal { get; set; }
     public int IdAlojamiento { get; set; }
+    public int ImportePendiente { get; set; }
 
 
 

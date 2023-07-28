@@ -25,6 +25,7 @@ public partial class Estadia
     public int ImporteTotal { get; set; }
 
     public int IdAlojamiento { get; set; }
+    public int ImportePendiente { get; set; }
 
     public virtual ICollection<Detalleestadium> Detalleestadia { get; } = new List<Detalleestadium>();
 

@@ -121,6 +121,7 @@ public class EstadiaController : ControllerBase{
         CantPersonas = comando.CantPersona,
         Desayuno = comando.Desayuno,
         ImporteTotal = comando.ImporteTotal,
+        ImportePendiente=comando.ImportePendiente,
         IdAlojamiento = comando.IdAlojamiento,
         IdEstado = comando.IdEstado
       };
@@ -201,6 +202,7 @@ public class EstadiaController : ControllerBase{
                             join l in _context.Alojamientos on e.IdAlojamiento equals l.IdAlojamientos
                             join p in _context.Personas on e.IdPersona equals p.Idpersona
                             where e.IdEstado == idEstado && l.IdComplejo== idComplejo
+                            orderby e.Fecha descending
                             select new
                             {
                                 e.NroEstadia,
@@ -210,6 +212,7 @@ public class EstadiaController : ControllerBase{
                                 e.CantPersonas,
                                 e.Desayuno,
                                 e.ImporteTotal,
+                                e.ImportePendiente,
                                 e.IdPersona,
                                 p.Nombre,
                                 p.Apellido,
@@ -233,7 +236,8 @@ public class EstadiaController : ControllerBase{
                         IdPersona=e.IdPersona,
                         Nombre=e.Nombre,
                         Apellido=e.Apellido,
-                        Descripcion=e.Descripcion
+                        Descripcion=e.Descripcion,
+                        ImportePendiente = e.ImportePendiente
 
 
                     };
@@ -271,6 +275,7 @@ public class EstadiaController : ControllerBase{
         db.CantPersonas = comando.CantPersona;
         db.Desayuno = comando.Desayuno;
         db.ImporteTotal = comando.ImporteTotal;
+        db.ImportePendiente=comando.ImportePendiente;
         db.IdAlojamiento = comando.IdAlojamiento;
         db.IdEstado = comando.IdEstado;
       
@@ -313,6 +318,7 @@ public class EstadiaController : ControllerBase{
               result.IdAlojamiento=estadia.IdAlojamiento;
               result.IdEstado=estadia.IdEstado;
               result.ImporteTotal=estadia.ImporteTotal;
+              result.ImportePendiente= estadia.ImportePendiente;
               result.FechaIngreso=estadia.FechaIngreso.Date;
                 
                 return result;
@@ -521,5 +527,79 @@ public class EstadiaController : ControllerBase{
             return BadRequest("Error al obtener el usuario");
         }
     }
+     [HttpGet]
+    [Route("api/Estadia/GetEstadias")]
+    public async Task<ActionResult<ResultadoEstadias>> GetEstadias([FromQuery] int idComplejo, [FromQuery] int pageNumber)
+    {
+        try
+        {
+            var result = new ResultadoEstadias();
+            var estadias = await (from e in _context.Estadias
+                            join es in _context.Estadoestadia on e.IdEstado equals es.IdEstadoEstadia
+                            join l in _context.Alojamientos on e.IdAlojamiento equals l.IdAlojamientos
+                            join p in _context.Personas on e.IdPersona equals p.Idpersona
+                            where  l.IdComplejo== idComplejo
+                            orderby e.Fecha descending
+                            select new
+                            {
+                                e.NroEstadia,
+                                e.Fecha,
+                                e.IdEstado,
+                                Estado =es.Descripcion,
+                                e.FechaIngreso,
+                                e.FechaEgreso,
+                                e.CantPersonas,
+                                e.Desayuno,
+                                e.ImporteTotal,
+                                e.ImportePendiente,
+                                e.IdPersona,
+                                p.Nombre,
+                                p.Apellido,
+                                l.Descripcion
+                            }).ToListAsync();
+;
+            if(estadias != null)
+            {
+                foreach (var e in estadias)
+                {
+                    var estadia= new est(){
+                    
+                        NroEstadia = e.NroEstadia,
+                        Fecha = e.Fecha,
+                        IdEstado=e.IdEstado,
+                        Estado = e.Estado,
+                        FechaIngreso = e.FechaIngreso,
+                        FechaEgreso = e.FechaEgreso,
+                        CantPersona= e.CantPersonas,
+                        Desayuno = e.Desayuno,
+                        ImporteTotal=e.ImporteTotal,
+                        ImportePendiente =e.ImportePendiente,
+                        IdPersona=e.IdPersona,
+                        Nombre=e.Nombre,
+                        Apellido=e.Apellido,
+                        Descripcion=e.Descripcion
+
+
+                    };
+                    result.listaEstadia.Add(estadia);
+                }
+
+                return result;
+
+            }
+            else
+            {
+
+                return result;
+
+            }
+        }
+        catch (Exception ex)
+        {
+            
+            return BadRequest("Error al obtener el usuario");
+        }
+    }
+
   
 }

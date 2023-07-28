@@ -17,6 +17,7 @@ public class ResultadoEstadia
     public int CantPersonas { get; set; }
 
     public sbyte Desayuno { get; set; }
+    public int ImportePendiente { get; set; }
 
     public int ImporteTotal { get; set; }
 

@@ -9,6 +9,9 @@ public partial class Complejo
 
     public string NombreComplejo { get; set; } = null!;
     public string? LinkFotos { get; set; }
+    public string? LinkFacebook { get; set; }
+    public string? LinkInstagram { get; set; }
+        public string? Telefono { get; set; }
 
     public virtual ICollection<Alojamiento> Alojamientos { get; } = new List<Alojamiento>();
 
